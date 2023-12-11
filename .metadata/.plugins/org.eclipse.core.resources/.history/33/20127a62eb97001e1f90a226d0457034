@@ -1,0 +1,5 @@
+package collection.auth;
+
+public class UserAuthenticationSystem {
+
+}

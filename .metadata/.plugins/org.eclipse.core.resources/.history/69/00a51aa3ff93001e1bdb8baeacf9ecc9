@@ -1,0 +1,142 @@
+package com.metahoizonemployeemanagement.core.service.impl;
+
+
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.util.List;
+
+import org.apache.poi.ss.usermodel.*;
+
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.metahoizonemployeemanagement.core.exception.ResourceNotFoundException;
+import com.metahoizonemployeemanagement.core.model.Employee;
+import com.metahoizonemployeemanagement.core.repository.EmployeeRepository;
+import com.metahoizonemployeemanagement.core.service.EmployeeService;
+
+
+@Service
+public class EmployeeServiceImpl implements EmployeeService {
+
+@Autowired
+	private EmployeeRepository empRepo;
+
+@Override
+public void addEmployee(Employee employee) {
+	// TODO Auto-generated method stub
+	empRepo.save(employee);
+	
+}
+
+
+@Override
+public void deleteEmployee(int id) {
+	// TODO Auto-generated method stub
+	empRepo.findById(id).orElseThrow(()->new ResourceNotFoundException("Employee", "Id", id));
+	empRepo.deleteById(id);
+}
+
+
+
+@Override
+public Employee getEmployeeById(int id) {
+
+	//Optional<Employee> employee=empRepo.findById(id).get();
+	//	if(employee.isPresent()) {
+//return employee.get();
+//}
+//else {
+//throw new ResourceNotFoundException("Employee", "Id", id);
+//}
+	return empRepo.findById(id).orElseThrow(()->new ResourceNotFoundException("Employee", "Id", id));
+	
+}
+
+@Override
+public List<Employee> getAllEmployees() {
+	
+	return empRepo.findAll();
+}
+
+public void exportDataToExcel() {
+    try {
+        Iterable<Employee> data = empRepo.findAll(); // Replace YourEntity with your actual JPA entity
+
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("employee Data");
+
+        // Create header row
+        Row headerRow = sheet.createRow(0);
+        ResultSetMetaData metaData = getResultSetMetaData(); // Implement this method based on your actual data source
+        int columnCount = metaData.getColumnCount();
+        for (int i = 1; i <= columnCount; i++) {
+            Cell cell = headerRow.createCell(i - 1);
+            cell.setCellValue(metaData.getColumnName(i));
+        }
+
+        // Fill data rows
+        int rowNum = 1;
+        for (Employee entity : data) { // Replace YourEntity with your actual JPA entity
+            Row row = sheet.createRow(rowNum++);
+            for (int i = 1; i <= columnCount; i++) {
+                Cell cell = row.createCell(i - 1);
+                // Access the corresponding fields in your entity and set cell values
+                // For example: cell.setCellValue(entity.getYourFieldName());
+            }
+        }
+
+        // Write to Excel file
+        try (FileOutputStream fileOut = new FileOutputStream("sql_data.xlsx")) {
+            workbook.write(fileOut);
+        }
+
+        System.out.println("Data exported successfully to sql_data.xlsx");
+
+    } catch (IOException e) {
+        e.printStackTrace();
+    } catch (SQLException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+}
+
+private ResultSetMetaData getResultSetMetaData() throws SQLException {
+    // Implement this method based on your actual data source
+    // For example, execute a query and return the ResultSetMetaData
+    // You might need to use a JDBC Connection and Statement to retrieve metadata.
+    // Alternatively, if using Spring Data JPA, you can use EntityManager and NativeQuery.
+
+    // Example (replace with your actual implementation):
+    // Connection connection = ...;
+    // Statement statement = connection.createStatement();
+    // ResultSet resultSet = statement.executeQuery("SELECT * FROM your_table");
+    // return resultSet.getMetaData();
+    return null;
+}
+@Override
+public Employee updateEmployee(Employee employee, int id) {
+
+	Employee existingEmployee=empRepo.findById(id).orElseThrow(()->new ResourceNotFoundException("Employee", "Id", id));
+	existingEmployee.setFirstName(employee.getFirstName());
+	existingEmployee.setLastName(employee.getLastName());
+	existingEmployee.setEmail(employee.getEmail());
+	existingEmployee.setFatherName(employee.getFatherName());
+	existingEmployee.setPhone(employee.getPhone());
+	existingEmployee.setGender(employee.getGender());
+	existingEmployee.setDob(employee.getDob());
+	existingEmployee.setCountry(employee.getCountry());
+	existingEmployee.setCity(employee.getCity());
+	existingEmployee.setState(employee.getState());
+	existingEmployee.setZipCode(employee.getZipCode());
+	empRepo.save(existingEmployee);
+	return existingEmployee;
+}
+	
+	
+
+}
